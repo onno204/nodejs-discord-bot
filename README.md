@@ -1,6 +1,6 @@
 # nodejs-discord-bot
 
-##Installation
+## Installation
 1. Clone this repo
 2. Run `npm install`
 3. Rename `userdata_example.js` to `userdata.js`
