@@ -153,7 +153,7 @@ class DiscordBot{
                 }else if (data.t == "GUILD_CREATE"){
                     self.active = false
                 }else if(data.t == "MESSAGE_CREATE"){
-                    if(data.d.channel_id == self.info.targetChannelId){
+                    if(data.d.channel_id === self.info.targetChannelId){
                         self.message_received(data.d); 
                     }
                 }else if(data.t == "PRESENCE_UPDATE"){
