@@ -57,7 +57,7 @@ function login_with_email(email, password, channelId){
             console.error("2FA required for user: " + email)
         }
     }).catch((error) => {
-        console.error("Login error["+error.response.status+"]: ", error.response.data)
+        console.error("Login error for "+email+" ["+error.response.status+"]: ", error.response.data)
     })
 }
 
@@ -90,9 +90,8 @@ class DiscordBot{
             // ws.send('something');
         });
         ws.on('ready', function incoming(data) {
-            console.log("READY: ", data)
+            // console.log("READY: ", data)
         });
-        
         ws.on('message', function incoming(data) {
             data = JSON.parse(data);
             if (data.op == discord_opts.HELLO){
@@ -124,17 +123,7 @@ class DiscordBot{
             }else if (data.op == discord_opts.HEARTBEAT){
                 self.login_gateway_send_heartbeat(ws);
             }else if (data.op == discord_opts.FAILED_OR_ZOMBIE){
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                console.error("PROCCES CLOSING, FAILED / ZOMBIE");
-                ws.close();
-                process.exit();
+                killSlave("FAILED OR ZOMBIE", ws)
             }else if (data.op == discord_opts.DISPATCH){
                 self.auth.heartbeat_s = data.s
                 if(data.t == "READY"){
@@ -150,6 +139,8 @@ class DiscordBot{
                     self.handler();
                 }else if(data.t == "PRESENCE_UPDATE"){
                     return true;
+                }else if(data.t == "MESSAGE_UPDATE"){
+                    return true;
                 }else if (data.t == "GUILD_CREATE"){
                     self.active = false
                 }else if(data.t == "MESSAGE_CREATE"){
@@ -162,25 +153,36 @@ class DiscordBot{
                     console.error("Unkown event: ", data.t);
                 }
             }else if (data.op == discord_opts.INVALID_SESSION){
-                console.error("Invalid session");
-                ws.close();
-                process.exit();
+                killSlave("Invalid Session", ws)
             }else if (data.op == discord_opts.HEARTBEAT_RECEIVED){
-                console.log("HEARTBEAT_RECEIVED");
+                // console.log("HEARTBEAT_RECEIVED");
             }else{
                 console.error("Discord gateway unkown/handled: ", data);
-                ws.close();
-                process.exit()
+                killSlave("Unkown opt! It is safer to kill", ws)
                 return false;
             }
         });
     }
+    killSlave(reason, ws){
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        console.error("["+self.info.userinfo.user.email+"] Slave has been killed. " + reason)
+        ws.close();
+        process.exit();
+    }
+
     login_gateway_send_heartbeat(ws){
         var heartbeat = {
             "op": discord_opts.HEARTBEAT,
             "d": (new Date()).getTime()
         }
-        console.log("sending heartbeat: ", JSON.stringify(heartbeat))
+        // console.log("sending heartbeat: ", JSON.stringify(heartbeat))
         ws.send(JSON.stringify(heartbeat))
     }
 
@@ -192,6 +194,7 @@ class DiscordBot{
         return $;
     }
     postRequest(url, data, callback, headers){
+        var self = this;
         if (headers == undefined){
             headers = {};
             if(this.auth.token != undefined){
@@ -217,7 +220,7 @@ class DiscordBot{
             callback(res.data)
         })
         .catch((error) => {
-            console.error("Error with Post["+error.response.status+"]("+url+"): ", error.response.data)
+            console.error("["+self.info.userinfo.user.email+"]Error with Post["+error.response.status+"]("+url+"): ", error.response.data)
             if (error.response.data.success == undefined){
                 error.response.data.success = false
                 if (error.response.data == 200){
@@ -230,7 +233,7 @@ class DiscordBot{
     sendMessage(message){
         if(this.active !== true){ return false; }
         this.postRequest(DiscordAPI.BASE + DiscordAPI.MESSAGE.format(this.info.targetChannelId), {content: message}, function(data){
-            console.log("send message: ", message)
+            // console.log("send message: ", message)
         })
     }
 
@@ -261,8 +264,8 @@ class DiscordBot{
                             }
                         }
                     }
-                    console.log("question: ", question)
-                    console.log("awnsers: ", awnsers)
+                    // console.log("question: ", question)
+                    // console.log("awnsers: ", awnsers)
                     this.sendMessage("1");
                     // axios.get('https://www.googleapis.com/customsearch/v1', {params: {q: question, cx: '002356836092859882685:3jog9tt85tj', key: "AIzaSyBleP7_InH4AElrDzhjiNHqPK2DaNlOIl8"}}).then(function (response) {
                     //     var data = response.data;
@@ -290,7 +293,7 @@ class DiscordBot{
             }
         }
         var msg = data.content;
-        console.log("Message received: ", msg);
+        // console.log("Message received: ", msg);
         if(msg.includes("The police are here, and they're after you!")){
             this.sendMessage( this.message_get_quoted_string(msg) );
         }else if(msg.includes(" need to buy a laptop in the shop to post memes")){
