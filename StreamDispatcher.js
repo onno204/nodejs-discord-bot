@@ -7,60 +7,55 @@ const dgram = require('dgram');
 const randomBytes = require('randombytes');
 const sodium = require('sodium-javascript');
 const ytdl = require('ytdl-core');
-const youtubeStream = require('youtube-audio-stream');
 const prism = require('prism-media');
 const { workerData } = require('worker_threads');
 const Speaker = require('speaker');
 const speaker = new Speaker({
-    channels: 2,          // 2 channels
-    bitDepth: 16,         // 16-bit samples
-    sampleRate: 48000     // 44,100 Hz sample rate
+    channels: 2,
+    bitDepth: 16,
+    sampleRate: 48000
 });
 
 const obj = workerData.obj;
 const discord_voice_opts = workerData.discord_voice_opts
 const FFMPEG_ARGUMENTS = [
-  '-analyzeduration', '0',
-  '-loglevel', '0',
-  '-f', 's16le',
-  '-ar', '48000',
-  '-ac', '2',
-//   '-c:a', 'libopus',
-//   '-b:a', '16K'
+    '-analyzeduration', '0',
+    '-loglevel', '0',
+    '-f', 's16le',
+    '-ar', '48000',
+    '-ac', '2',
+    // '-bufsize', '32k',
+    // '-maxrate', '2m',
+    // '-c:a', 'libopus',
+    // '-b:a', '16K'
 ];
 const client = dgram.createSocket('udp4');
 
 function voice_play_youtubelink(url){
-    return voice_play_from_url(url)
+    // return voice_play_from_url(url)
     ytdl.getInfo(url, { filter: 'audioonly', quality: 'highestaudio' }, (err, data) => {
         if (err) throw err;
         var format = ytdl.chooseFormat(data.formats, { quality: 'highestaudio' });
         if (format) {
-            console.log('Format found: ', format);
             voice_play_from_url(format['url'])
         }
     })
 }
 function voice_play_from_url(url) { 
-    var stream = ytdl(url, { filter: 'audioonly' }, { passes: 3 })
+    // var stream = ytdl(url, { filter: 'audioonly' }, { passes: 3 })
     // const stream = youtubeStream(url)
-    console.log("running from uri: ", url)
-    var args = FFMPEG_ARGUMENTS.slice() //['-i', url, ...FFMPEG_ARGUMENTS]
+    console.log("[CHURCH] Running from url: ", workerData.url)
+    var args = ['-i', url, ...FFMPEG_ARGUMENTS] //FFMPEG_ARGUMENTS.slice()
     const ffmpeg = new prism.FFmpeg({ args });
     const streams = { ffmpeg };
-    stream.pipe(ffmpeg);
     return voice_play_youtubelink_playstream(ffmpeg, streams);
 }
 function voice_play_youtubelink_playstream(stream, streams){
-    // var encoder = new opusscript(48000, 2, opusscript.Application.AUDIO);
-    // const opus = streams.opus = encoder.encode(stream, 960);
+    // stream.pipe(speaker)
     const opus = streams.opus = new prism.opus.Encoder({ channels: 2, rate: 48000, frameSize: 960 });
-    // const debug1 = new debugStream("opus");
-    // stream.pipe(debug1);
-    // debug1.pipe(streams.opus)
-    // stream.pipe(speaker);
+    stream.pipe(opus);
     const dispatcher = new StreamDispatcher(obj, streams);
-    streams.opus.pipe(dispatcher)
+    opus.pipe(dispatcher)
 }
 
 
@@ -96,6 +91,7 @@ class StreamDispatcher extends Writable {
           }
         };
         this.count = 0
+        this.sendCallback = undefined;
 
         this.on('error', () => streamError());
         if (this.streams.ffmpeg) this.streams.ffmpeg.on('error', err => streamError('ffmpeg', err));
@@ -114,13 +110,16 @@ class StreamDispatcher extends Writable {
         // console.log("writting: ", this.count)
     }
     _step(done) {
-      this._sdata.sequence++;
-      this._sdata.timestamp += (48000 / 100) * 2;
-      if (this._sdata.sequence >= 2 ** 16) this._sdata.sequence = 0;
-      if (this._sdata.timestamp >= 2 ** 32) this._sdata.timestamp = 0;
-      this.count++;
-      done()
+        setTimeout(() => {
+            done()
+        }, 20 + (this.count * 20) - (Date.now() - this.startTime));
+        this._sdata.sequence++;
+        this._sdata.timestamp += (48000 / 100) * 2;
+        if (this._sdata.sequence >= 2 ** 16) this._sdata.sequence = 0;
+        if (this._sdata.timestamp >= 2 ** 32) this._sdata.timestamp = 0;
+        this.count++;
     }
+
     voice_encrypt(buffer) {
         // xsalsa20_poly1305_suffix
         var random = randomBytes(24)

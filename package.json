@@ -9,7 +9,7 @@
     "jquery": "^3.4.1",
     "jsdom": "^15.2.1",
     "m3u8stream": "^0.6.4",
-    "node-opus": "^0.3.3",
+    "opusscript": "0.0.7",
     "parse-time": "^0.1.4",
     "prism-media": "^1.1.0",
     "randombytes": "^2.1.0",
@@ -17,7 +17,6 @@
     "sodium-javascript": "^0.5.5",
     "speaker": "^0.5.1",
     "ws": "^7.2.1",
-    "youtube-audio-stream": "^0.3.5",
     "ytdl-core": "^1.0.6",
     "ytdl-core-discord": "^1.0.3"
   },

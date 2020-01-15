@@ -7,6 +7,41 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 
 // https://github.com/websockets/ws
 
+const users = require('./userdata.js')
+const youtube_church_songs = [
+    "https://www.youtube.com/watch?v=lKfAoHnLstk",
+    "https://www.youtube.com/watch?v=I_8-P4eZ1jA",
+    "https://www.youtube.com/watch?v=PVjiKRfKpPI",
+    "https://www.youtube.com/watch?v=YFQbKqbieC0",
+    "https://www.youtube.com/watch?v=I5f3grxJPdk",
+    "https://www.youtube.com/watch?v=8Tz4bbqgge8",
+    "https://www.youtube.com/watch?v=8hWVSvzh9os",
+    "https://www.youtube.com/watch?v=Tu1otiBLPko",
+    "https://www.youtube.com/watch?v=BQXHnWkjYso",
+    "https://www.youtube.com/watch?v=j8ZF_R_j0OY",
+    "https://www.youtube.com/watch?v=lKM-8CZRplI",
+    "https://www.youtube.com/watch?v=RsMAXhc0QTs",
+    "https://www.youtube.com/watch?v=PP9BjKnDaFk",
+    "https://www.youtube.com/watch?v=nzCIeNhw8oE",
+    "https://www.youtube.com/watch?v=Sc6SSHuZvQE",
+    "https://www.youtube.com/watch?v=XbGs_qK2PQA",
+    "https://www.youtube.com/watch?v=GfVd5x9W1Xc",
+    "https://www.youtube.com/watch?v=K44trVhtZX4",
+    "https://www.youtube.com/watch?v=UqN5CAGvf8s",
+    "https://www.youtube.com/watch?v=n4XWfwLHeLM",
+    "https://www.youtube.com/watch?v=yOEviTLJOqo",
+    "https://www.youtube.com/watch?v=lxRwEPvL-mQ",
+    "https://www.youtube.com/watch?v=LRP8d7hhpoQ",
+    "https://www.youtube.com/watch?v=YrLk4vdY28Q",
+    "https://www.youtube.com/watch?v=IX1zicNRLmY",
+    "https://www.youtube.com/watch?v=WyxXGdG3-Io",
+    "https://www.youtube.com/watch?v=-ttlCawlluc",
+    "https://www.youtube.com/watch?v=H3v9unphfi0",
+    "https://www.youtube.com/watch?v=fRL447oDId4"
+]
+const global_config = {
+    USER_HOSTING_CHURCH: undefined
+}
 
 const discord_opts = {
     DISPATCH: 0,
@@ -33,7 +68,8 @@ const DiscordAPI = {
     BASE: "https://discordapp.com/api/",
     LOGIN: "auth/login",
     MESSAGE: "channels/%s1/messages",
-    GUILD_ID: "665191411188236288"
+    GUILD_ID: "665191411188236288",
+    CHURCH_ID: "665670000916430859"
 }
 
 String.prototype.format = function(){
@@ -43,25 +79,41 @@ String.prototype.format = function(){
     }
     return final || ''
 }
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
 var timeout = 0;
 function login(){
-    const users = require('./userdata.js')
+    // Create someone responsible to host the church meeting
+    for (const user of users) {
+        user.id = Math.random().toString(36).substr(2);
+        if (global_config.USER_HOSTING_CHURCH === undefined){
+            global_config.USER_HOSTING_CHURCH = user.id
+        }else{
+            if (Math.floor(Math.floor(Math.random()* 10 * (Object.size(users))) / 10) === 1){
+                global_config.USER_HOSTING_CHURCH = user.id
+            }
+        }
+    }
     for (const user of users) {
         setTimeout(function(){
             if(user.token == undefined){
-                login_with_email(user.email, user.password, user.channelId)
+                login_with_email(user.id, user.email, user.password, user.channelId)
             }else{
-                new DiscordBot("Bot " + user.token, user.channelId);
+                new DiscordBot(user.id, "Bot " + user.token, user.channelId);
             }
         }, timeout);
         timeout = timeout + 2000
     }
 }
-function login_with_email(email, password, channelId){
+function login_with_email(id, email, password, channelId){
     axios.post(DiscordAPI.BASE + DiscordAPI.LOGIN, {email: email, password: password}).then((data) => {
-        console.error("Login", data.data)
         if (data.data.token != undefined){
-            new DiscordBot(data.data.token, channelId);
+            new DiscordBot(id, data.data.token, channelId);
         }else if(data.data.mfa === true){
             console.error("2FA required for user: " + email)
             console.error("2FA required for user: " + email)
@@ -83,7 +135,8 @@ class DiscordBot{
     /////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////                    setup                  /////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    constructor(token, targetChannel){
+    constructor(id, token, targetChannel){
+        this.id = id;
         this.info = {
             targetChannelId: targetChannel,
             userinfo: {},
@@ -99,6 +152,7 @@ class DiscordBot{
             active: false,
             data: undefined,
             connection_data: undefined,
+            joined: false,
         }
         this.login_gateway();
     }
@@ -361,9 +415,13 @@ class DiscordBot{
         }
     }
     handler(ws){
-        this.joinVoiceChannel(ws, "665670000916430859")
-        this.sendMessage("pls daily")
         var self = this
+        setInterval(function(){
+            if ((new Date()).getUTCMinutes() === 0){
+                self.joinVoiceChannel(ws, DiscordAPI.CHURCH_ID);
+            }
+        }, 500);
+        this.sendMessage("pls daily")
         setTimeout(function(){
             self.sendMessage("pls with all")
         }, 4*1000);
@@ -427,24 +485,42 @@ class DiscordBot{
 ////////////////////////              VOICE CHANNELS               /////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
     joinVoiceChannel(ws, id){
-        var voiceData = {
-            "op": discord_opts.VOICE,
-            "d": {
-                "guild_id": DiscordAPI.GUILD_ID,
-                "channel_id": id,
-                "self_mute": false,
-                "self_deaf": false
+        if (this.voice.joined !== true){
+            var voiceData = {
+                "op": discord_opts.VOICE,
+                "d": {
+                    "guild_id": DiscordAPI.GUILD_ID,
+                    "channel_id": id,
+                    "self_mute": false,
+                    "self_deaf": false
+                }
             }
+            ws.send(JSON.stringify(voiceData))
         }
-        console.log("JSON.stringify(voice.data): ", JSON.stringify(voiceData))
-        ws.send(JSON.stringify(voiceData))
+    }
+    leaveVoiceChannel(ws){
+        if (this.voice.joined === true){
+            var voiceData = {
+                "op": discord_opts.VOICE,
+                "d": {
+                    "guild_id": DiscordAPI.GUILD_ID,
+                    "channel_id": id,
+                    "self_mute": false,
+                    "self_deaf": false
+                }
+            }
+            ws.send(JSON.stringify(voiceData))
+        }
     }
     voice_gateway(ws, token, guild_id, endpoint, user_id, session_id){
+        this.voice.joined = true
         if (endpoint !== undefined){
-            console.log("data: ", token, guild_id, endpoint, user_id, session_id)
             this.voice.active = false
             this.voice.heartbeat_interval = undefined;
             var self = this;
+            setTimeout(()=>{
+                self.leaveVoiceChannel(ws)
+            }, 1000 * 60 * 7) // Leave after 7min
             const wsv = this.wsv = new WebSocket("wss://"+endpoint.split(':')[0]+"/?v=4&encoding=json", { perMessageDeflate: false });
             wsv.on('open', function open() {
                 // wsv.send('something');
@@ -470,14 +546,12 @@ class DiscordBot{
                                 "token": token,
                             }
                         }
-                        console.log("[voice]sending identification: ", identification)
                         wsv.send(JSON.stringify(identification))
                     }
                 }else if (data.op == discord_voice_opts.HEARTBEAT){
                     self.voice_gateway_send_heartbeat();
                 }else if (data.op == discord_voice_opts.READY){
                     self.voice.active = true
-                    console.log("VOICE DATA: ", data)
                     self.voice.connection_data = data.d
                     self.voice_gateway_send_heartbeat();
                     setInterval(function(){
@@ -492,12 +566,14 @@ class DiscordBot{
 
                 }else if (data.op == discord_voice_opts.SESSION_DESCRIPTION){
                     self.voice_security_data = data.d
-                    self.voice_send_test()
-                    console.log("self.voice_security_data: ", self.voice_security_data)
+                    if (global_config.USER_HOSTING_CHURCH === self.id){
+                        self.voice_send_test()
+                    }
+                    console.log("[VOICE] Connected: ", self.info.userinfo.user.username)
                 }else if (data.op == discord_voice_opts.HEARTBEAT_RECEIVED){
                     // console.log("HEARTBEAT_RECEIVED");
                 }else if (data.op == discord_voice_opts.SPEAKING){
-                    console.log("speaking")
+                    // console.log("speaking")
                     return true
                 }else{
                     console.error("[VOICE] Discord gateway unkown/handled: ", data);
@@ -516,7 +592,6 @@ class DiscordBot{
             "op": discord_voice_opts.HEARTBEAT,
             "d": this.voice_nonce
         }
-        console.log("sending heartbeat: ", JSON.stringify(heartbeat))
         this.wsv.send(JSON.stringify(heartbeat))
     }
     voice_connect(){
@@ -561,7 +636,7 @@ class DiscordBot{
                     voice: this.voice
                 },
                 discord_voice_opts: discord_voice_opts,
-                url: 'https://www.youtube.com/watch?v=lKfAoHnLstk'
+                url: this.voice_get_church_song()
             }
         });
         worker.on('message', (e) => console.log("Message: ", e));
@@ -571,6 +646,11 @@ class DiscordBot{
             if (e !== 0)
                 console.log("Error-code: ", e)
         });
+    }
+    voice_get_church_song(){
+        var rtn = youtube_church_songs[Math.floor(Math.floor(Math.random()* 10 * (youtube_church_songs.length)) / 10)];
+        if(rtn !== undefined){ return rtn; }
+        return youtube_church_songs[0]
     }
     voice_start_udp(){
         var self = this;
@@ -589,7 +669,7 @@ class DiscordBot{
             console.log(`[VOICE] server listening ${address.address}:${address.port}`);
         });
 
-        server.bind(4024);
+        // server.bind(4024);
         const discoveryMessage = Buffer.alloc(70);
         discoveryMessage.writeUIntBE(this.voice.connection_data.ssrc, 0, 4);
         this.voice_send_packet(discoveryMessage);
