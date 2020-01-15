@@ -15,7 +15,6 @@
     "randombytes": "^2.1.0",
     "request": "^2.88.0",
     "sodium-javascript": "^0.5.5",
-    "speaker": "^0.5.1",
     "ws": "^7.2.1",
     "ytdl-core": "^1.0.6"
   },

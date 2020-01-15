@@ -9,12 +9,12 @@ const sodium = require('sodium-javascript');
 const ytdl = require('ytdl-core');
 const prism = require('prism-media');
 const { workerData } = require('worker_threads');
-const Speaker = require('speaker');
-const speaker = new Speaker({
-    channels: 2,
-    bitDepth: 16,
-    sampleRate: 48000
-});
+// const Speaker = require('speaker');
+// const speaker = new Speaker({
+//     channels: 2,
+//     bitDepth: 16,
+//     sampleRate: 48000
+// });
 
 const obj = workerData.obj;
 const discord_voice_opts = workerData.discord_voice_opts
