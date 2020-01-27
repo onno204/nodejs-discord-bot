@@ -504,7 +504,7 @@ class DiscordBot{
                 "op": discord_opts.VOICE,
                 "d": {
                     "guild_id": DiscordAPI.GUILD_ID,
-                    "channel_id": id,
+                    "channel_id": DiscordAPI.GUILD_ID,
                     "self_mute": false,
                     "self_deaf": false
                 }
