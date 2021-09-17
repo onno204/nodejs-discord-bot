@@ -16,7 +16,7 @@
     "request": "^2.88.0",
     "sodium-javascript": "^0.5.5",
     "ws": "^7.2.1",
-    "ytdl-core": "^1.0.6"
+    "ytdl-core": "^4.0.0"
   },
   "devDependencies": {},
   "scripts": {
