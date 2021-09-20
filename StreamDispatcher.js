@@ -95,6 +95,7 @@ class StreamDispatcher extends Writable {
     this.on('finish', () => {
     });
     const streamError = (type, err) => {
+      console.error("Stream error: ", type, err)
       if (type && err) {
         err.message = `${type} stream: ${err.message}`;
       }
@@ -117,7 +118,7 @@ class StreamDispatcher extends Writable {
     }
     this._step(done)
     this.voice_send_chunk(chunk);
-    // console.log("writting: ", this.count)
+    console.log("writting: ", this.count)
   }
 
   _step(done) {

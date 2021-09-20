@@ -20,7 +20,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "main": "node main.js",
+    "music": "node music.js"
   },
   "repository": {
     "type": "git",

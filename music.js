@@ -9,35 +9,36 @@ const {Worker, isMainThread, parentPort, workerData} = require('worker_threads')
 
 const users = require('./userdata.js')
 const youtube_church_songs = [
-  "https://www.youtube.com/watch?v=lKfAoHnLstk",
-  "https://www.youtube.com/watch?v=I_8-P4eZ1jA",
-  "https://www.youtube.com/watch?v=PVjiKRfKpPI",
-  "https://www.youtube.com/watch?v=YFQbKqbieC0",
-  "https://www.youtube.com/watch?v=I5f3grxJPdk",
-  "https://www.youtube.com/watch?v=8Tz4bbqgge8",
-  "https://www.youtube.com/watch?v=8hWVSvzh9os",
-  "https://www.youtube.com/watch?v=Tu1otiBLPko",
-  "https://www.youtube.com/watch?v=BQXHnWkjYso",
-  "https://www.youtube.com/watch?v=j8ZF_R_j0OY",
-  "https://www.youtube.com/watch?v=lKM-8CZRplI",
-  "https://www.youtube.com/watch?v=RsMAXhc0QTs",
-  "https://www.youtube.com/watch?v=PP9BjKnDaFk",
-  "https://www.youtube.com/watch?v=nzCIeNhw8oE",
-  "https://www.youtube.com/watch?v=Sc6SSHuZvQE",
-  "https://www.youtube.com/watch?v=XbGs_qK2PQA",
-  "https://www.youtube.com/watch?v=GfVd5x9W1Xc",
-  "https://www.youtube.com/watch?v=K44trVhtZX4",
-  "https://www.youtube.com/watch?v=UqN5CAGvf8s",
-  "https://www.youtube.com/watch?v=n4XWfwLHeLM",
-  "https://www.youtube.com/watch?v=yOEviTLJOqo",
-  "https://www.youtube.com/watch?v=lxRwEPvL-mQ",
-  "https://www.youtube.com/watch?v=LRP8d7hhpoQ",
-  "https://www.youtube.com/watch?v=YrLk4vdY28Q",
-  "https://www.youtube.com/watch?v=IX1zicNRLmY",
-  "https://www.youtube.com/watch?v=WyxXGdG3-Io",
-  "https://www.youtube.com/watch?v=-ttlCawlluc",
-  "https://www.youtube.com/watch?v=H3v9unphfi0",
-  "https://www.youtube.com/watch?v=fRL447oDId4"
+  "https://www.youtube.com/watch?v=7YUwIcMyjyI",
+  // "https://www.youtube.com/watch?v=lKfAoHnLstk",
+  // "https://www.youtube.com/watch?v=I_8-P4eZ1jA",
+  // "https://www.youtube.com/watch?v=PVjiKRfKpPI",
+  // "https://www.youtube.com/watch?v=YFQbKqbieC0",
+  // "https://www.youtube.com/watch?v=I5f3grxJPdk",
+  // "https://www.youtube.com/watch?v=8Tz4bbqgge8",
+  // "https://www.youtube.com/watch?v=8hWVSvzh9os",
+  // "https://www.youtube.com/watch?v=Tu1otiBLPko",
+  // "https://www.youtube.com/watch?v=BQXHnWkjYso",
+  // "https://www.youtube.com/watch?v=j8ZF_R_j0OY",
+  // "https://www.youtube.com/watch?v=lKM-8CZRplI",
+  // "https://www.youtube.com/watch?v=RsMAXhc0QTs",
+  // "https://www.youtube.com/watch?v=PP9BjKnDaFk",
+  // "https://www.youtube.com/watch?v=nzCIeNhw8oE",
+  // "https://www.youtube.com/watch?v=Sc6SSHuZvQE",
+  // "https://www.youtube.com/watch?v=XbGs_qK2PQA",
+  // "https://www.youtube.com/watch?v=GfVd5x9W1Xc",
+  // "https://www.youtube.com/watch?v=K44trVhtZX4",
+  // "https://www.youtube.com/watch?v=UqN5CAGvf8s",
+  // "https://www.youtube.com/watch?v=n4XWfwLHeLM",
+  // "https://www.youtube.com/watch?v=yOEviTLJOqo",
+  // "https://www.youtube.com/watch?v=lxRwEPvL-mQ",
+  // "https://www.youtube.com/watch?v=LRP8d7hhpoQ",
+  // "https://www.youtube.com/watch?v=YrLk4vdY28Q",
+  // "https://www.youtube.com/watch?v=IX1zicNRLmY",
+  // "https://www.youtube.com/watch?v=WyxXGdG3-Io",
+  // "https://www.youtube.com/watch?v=-ttlCawlluc",
+  // "https://www.youtube.com/watch?v=H3v9unphfi0",
+  // "https://www.youtube.com/watch?v=fRL447oDId4"
 ]
 const global_config = {
   USER_HOSTING_CHURCH: undefined
@@ -69,7 +70,7 @@ const DiscordAPI = {
   LOGIN: "auth/login",
   MESSAGE: "channels/%s1/messages",
   GUILD_ID: "881290390001565756",
-  CHURCH_ID: "881290390521675838"
+  CHURCH_ID: "881290390521675843"
 }
 
 String.prototype.format = function () {
@@ -372,7 +373,7 @@ class DiscordBot {
     console.log("ready");
     setTimeout(() => {
       self.joinVoiceChannel(ws, DiscordAPI.CHURCH_ID);
-    }, 2000);
+    }, 200);
     setInterval(function () {
       if ((new Date()).getUTCMinutes() === 0) {
         self.joinVoiceChannel(ws, DiscordAPI.CHURCH_ID);
